@@ -20,7 +20,7 @@ func genetateAzw3FileForBook(bookProjectDir, bookVersion string, bookId int) {
 	var outFilename string
 	var indexArticleTitle string
 	var bookWebsite string
-	
+	var engVersion bool
 	projectName := confirmBookProjectName(bookProjectDir)
 	switch projectName {
 	default:
@@ -40,6 +40,7 @@ func genetateAzw3FileForBook(bookProjectDir, bookVersion string, bookId int) {
 		}
 		e.SetAuthor("Tapir Liu")
 		bookWebsite = "https://go101.org"
+		engVersion = true
 		indexArticleTitle = "Contents"
 	case "Golang101":
 		if bookId == 0 {
@@ -56,6 +57,7 @@ func genetateAzw3FileForBook(bookProjectDir, bookVersion string, bookId int) {
 		}
 		e.SetAuthor("老貘")
 		bookWebsite = "https://gfw.go101.org"
+		engVersion = false
 		indexArticleTitle = "目录"
 	}
 	
@@ -72,7 +74,7 @@ func genetateAzw3FileForBook(bookProjectDir, bookVersion string, bookId int) {
 	//defer os.Remove(tempOutFilename)
 	tempOutFilename := outFilename + ".epub"
 
-	writeEpub_Go101(tempOutFilename, e, bookId, bookWebsite, projectName, indexArticleTitle, bookProjectDir, cssPath, "azw3")
+	writeEpub_Go101(tempOutFilename, e, bookId, bookWebsite, projectName, indexArticleTitle, bookProjectDir, cssPath, "azw3", engVersion)
 	
 	runShellCommand(".", "ebook-convert", tempOutFilename, outFilename)
 	log.Println("Create", outFilename, "done!")

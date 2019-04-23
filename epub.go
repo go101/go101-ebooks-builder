@@ -36,6 +36,7 @@ func genetateEpubFile(bookProjectDir, bookVersion string) string {
 	var outFilename string
 	var indexArticleTitle string
 	var bookWebsite string
+	var engVersion bool
 	
 	projectName := confirmBookProjectName(bookProjectDir)
 	switch projectName {
@@ -46,12 +47,14 @@ func genetateEpubFile(bookProjectDir, bookVersion string) string {
 		e.SetAuthor("Tapir Liu")
 		indexArticleTitle = "Contents"
 		bookWebsite = "https://go101.org"
+		engVersion = true
 		outFilename = "Go101-" + bookVersion + ".epub"
 	case "Golang101":
 		e = epub.NewEpub("Go语言101")
 		e.SetAuthor("老貘")
 		indexArticleTitle = "目录"
 		bookWebsite = "https://gfw.go101.org"
+		engVersion = false
 		outFilename = "Golang101-" + bookVersion + ".epub"
 	}
 	
@@ -63,7 +66,7 @@ func genetateEpubFile(bookProjectDir, bookVersion string) string {
 		log.Fatalln("add css", cssFilename, "failed:", err)
 	}
 
-	writeEpub_Go101(outFilename, e, -1, bookWebsite, projectName, indexArticleTitle, bookProjectDir, cssPath, "epub")
+	writeEpub_Go101(outFilename, e, -1, bookWebsite, projectName, indexArticleTitle, bookProjectDir, cssPath, "epub", engVersion)
 	log.Println("Create", outFilename, "done!")
 	
 	return outFilename
@@ -77,35 +80,34 @@ const (
 )
 
 // zero bookId means all.
-func writeEpub_Go101(outputFilename string, e *epub.Epub, bookId int, bookWebsite, projectName, indexArticleTitle, bookProjectDir, cssPath string, target string) {
+func writeEpub_Go101(outputFilename string, e *epub.Epub, bookId int, bookWebsite, projectName, indexArticleTitle, bookProjectDir, cssPath, target string, engVersion bool) {
 	imagePaths := addImages(e, bookProjectDir)
 	var rewardImage string
 	if projectName == "Golang101" {
 		rewardImage = "res/101-reward-qrcode-2.png"
 	}
 	
-	index, articles := mustArticles(bookProjectDir)
+	index, articles, chapterMapping := mustArticles(bookProjectDir, engVersion)
 	index.Title = indexArticleTitle
 	index.Content = append([]byte("<h1>" + index.Title + "</h1>"), index.Content...)
 	
 	if bookId > 0 {
 		index.Content = filterArticles(index.Content, bookId)
 	}
-	internalArticles := collectInternalArticles(index.Content)
-	
-	log.Println("internalArticles:", internalArticles)
+	//internalArticles := collectInternalArticles(index.Content)
+	//log.Println("internalArticles:", internalArticles)	
 	
 	oldArticles := articles
 	articles = nil
 	for _, article := range oldArticles {
-		if _, present := internalArticles[article.Filename]; present {
+		if _, present := chapterMapping[article.Filename]; present {
 			articles = append(articles, article)
 		}
 	}
 	articles = append([]*Article{index}, articles...)
 
 	escapeCharactorWithinCodeTags(articles, target)
-	replaceInternalLinks(articles, internalArticles, bookWebsite)
+	replaceInternalLinks(articles, chapterMapping, bookWebsite, target == "print", engVersion)
 	replaceImageSources(articles, imagePaths, rewardImage)
 
 	switch target {
@@ -135,8 +137,7 @@ func writeEpub_Go101(outputFilename string, e *epub.Epub, bookId int, bookWebsit
 	e.SetCover(imagePaths["res/101-front-cover-1400x.jpg"], "")
 
 	for _, article := range articles {
-		//internalFilename := strings.ReplaceAll(article.Filename, ".html", "")
-		internalFilename := string(internalArticles[article.Filename])
+		internalFilename := string(article.internalFilename)
 		e.AddSection(string(article.Content), article.Title, internalFilename, cssPath)
 	}
 

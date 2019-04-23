@@ -106,8 +106,8 @@ func genetatePdfFile(bookProjectDir, bookVersion string) {
 	
 	runShellCommand(".", "ebook-convert", epubFilename, outFilename,
 			"--prefer-metadata-cover",
-			"--pdf-footer-template", `'<p style="text-align:center;">_PAGENUM_</p>'`,
-			"--pdf-header-template", `'<p style="text-align:center;">_SECTION_</p>'`,
+			"--pdf-footer-template", `'<p style="text-align:center; font-size: small;">_PAGENUM_</p>'`,
+			"--pdf-header-template", `'<p style="text-align:center; font-size: small;">_SECTION_</p>'`,
 			"--paper-size", "a4",
 			"--pdf-default-font-size", `14`,
 			"--pdf-mono-font-size", `13`,
@@ -129,11 +129,21 @@ func genetatePdfFile(bookProjectDir, bookVersion string) {
 
 
 
-func genetatePdfFile(bookProjectDir, bookVersion string) string {
+func genetatePdfFile(bookProjectDir, bookVersion string, forPrint bool) string {
 	var e *epub.Epub
 	var outFilename string
 	var indexArticleTitle string
 	var bookWebsite string
+	var engVersion bool
+	
+	target := "pdf"
+	css := PdfCSS
+	ext := ".pdf.epub"
+	if forPrint {
+		target = "print"
+		ext = ".print" + ext
+		css = PrintCSS
+	}
 	
 	projectName := confirmBookProjectName(bookProjectDir)
 	switch projectName {
@@ -144,24 +154,26 @@ func genetatePdfFile(bookProjectDir, bookVersion string) string {
 		e.SetAuthor("Tapir Liu")
 		indexArticleTitle = "Contents"
 		bookWebsite = "https://go101.org"
-		outFilename = "Go101-" + bookVersion + ".pdf.epub"
+		engVersion = true
+		outFilename = "Go101-" + bookVersion + ext
 	case "Golang101":
 		e = epub.NewEpub("Go语言101")
 		e.SetAuthor("老貘")
 		indexArticleTitle = "目录"
 		bookWebsite = "https://gfw.go101.org"
-		outFilename = "Golang101-" + bookVersion + ".pdf.epub"
+		engVersion = false
+		outFilename = "Golang101-" + bookVersion + ext
 	}
 	
 	cssFilename := "all.css"
-	tempCssFile := mustCreateTempFile("all*.css", []byte(PdfCSS))
+	tempCssFile := mustCreateTempFile("all*.css", []byte(css))
 	defer os.Remove(tempCssFile)
 	cssPath, err := e.AddCSS(tempCssFile, cssFilename)
 	if err != nil {
 		log.Fatalln("add css", cssFilename, "failed:", err)
 	}
 
-	writeEpub_Go101(outFilename, e, -1, bookWebsite, projectName, indexArticleTitle, bookProjectDir, cssPath, "pdf")
+	writeEpub_Go101(outFilename, e, -1, bookWebsite, projectName, indexArticleTitle, bookProjectDir, cssPath, target, engVersion)
 	log.Println("Create", outFilename, "done!")
 	
 	return outFilename

@@ -20,6 +20,7 @@ func genetateMobiFileForBook(bookProjectDir, bookVersion string, bookId int) {
 	var outFilename string
 	var indexArticleTitle string
 	var bookWebsite string
+	var engVersion bool
 	
 	projectName := confirmBookProjectName(bookProjectDir)
 	switch projectName {
@@ -40,6 +41,7 @@ func genetateMobiFileForBook(bookProjectDir, bookVersion string, bookId int) {
 		}
 		e.SetAuthor("Tapir Liu")
 		bookWebsite = "https://go101.org"
+		engVersion = true
 		indexArticleTitle = "Contents"
 	case "Golang101":
 		if bookId == 0 {
@@ -56,6 +58,7 @@ func genetateMobiFileForBook(bookProjectDir, bookVersion string, bookId int) {
 		}
 		e.SetAuthor("老貘")
 		bookWebsite = "https://gfw.go101.org"
+		engVersion = false
 		indexArticleTitle = "目录"
 	}
 	
@@ -72,7 +75,7 @@ func genetateMobiFileForBook(bookProjectDir, bookVersion string, bookId int) {
 	//defer os.Remove(tempOutFilename)
 	tempOutFilename := outFilename + ".epub"
 
-	writeEpub_Go101(tempOutFilename, e, bookId, bookWebsite, projectName, indexArticleTitle, bookProjectDir, cssPath, "mobi")
+	writeEpub_Go101(tempOutFilename, e, bookId, bookWebsite, projectName, indexArticleTitle, bookProjectDir, cssPath, "mobi", engVersion)
 	println("ebook-convert", tempOutFilename, outFilename)
 	runShellCommand(".", "ebook-convert", tempOutFilename, outFilename)
 	log.Println("Create", outFilename, "done!")

@@ -72,13 +72,16 @@ type Article struct {
 	Filename string
 	Title    string
 	Content  []byte
+	
+	chapter, chapter2 string
+	internalFilename  []byte
 }
 
 const ArticlesFolder = "articles"
 
-func mustArticles(root string) (index *Article, articles []*Article) {
-	index = mustArticle(root, ArticlesFolder, "101.html")
-	articles = must101Articles(root, index)
+func mustArticles(root string, engVersion bool) (index *Article, articles []*Article, chapterMapping map[string]*Article) {
+	index = mustArticle(engVersion, -1, root, ArticlesFolder, "101.html")
+	articles, chapterMapping = must101Articles(root, index, engVersion)
 	//for _, a := range articles {
 	//	log.Println(a.Title)
 	//}
@@ -86,7 +89,7 @@ func mustArticles(root string) (index *Article, articles []*Article) {
 }
 
 // The last path token is the filename.
-func mustArticle(root string, pathTokens ...string) *Article {
+func mustArticle(engVersion bool, chapterNumber int, root string, pathTokens ...string) *Article {
 	path := filepath.Join(root, filepath.Join(pathTokens...))
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -98,10 +101,24 @@ func mustArticle(root string, pathTokens ...string) *Article {
 		log.Fatalln("title not found in file(" + path + ")")
 	}
 
+	chapter, chapter2 := "", ""
+	if engVersion {
+		chapter = fmt.Sprintf(" (§%d)", chapterNumber)
+		chapter2 = fmt.Sprintf("§%d. ", chapterNumber)
+		title = fmt.Sprintf("§%d. %s", chapterNumber, title)
+	} else {
+		chapter = fmt.Sprintf("（第%d章）", chapterNumber)
+		chapter2 = fmt.Sprintf("第%d章：", chapterNumber)
+		title = fmt.Sprintf("第%d章：%s", chapterNumber, title)
+	}
+
 	return &Article {
 		Filename: pathTokens[len(pathTokens)-1],
 		Title:    title,
 		Content:  content,
+		
+		chapter:  chapter,
+		chapter2: chapter2,
 	}
 }
 
@@ -136,7 +153,9 @@ func retrieveArticleTitle(content []byte) string {
 var Anchor, _Anchor, LineToRemoveTag, endl = []byte(`<li><a class="index" href="`), []byte(`">`), []byte(`(to remove)`), []byte("\n")
 var IndexContentStart, IndexContentEnd = []byte(`<!-- index starts (don't remove) -->`), []byte(`<!-- index ends (don't remove) -->`)
 
-func must101Articles(root string, indexArticle *Article) (articles []*Article) {
+func must101Articles(root string, indexArticle *Article, engVersion bool) (articles []*Article, chapterMapping map[string]*Article) {
+	chapterMapping = make(map[string]*Article)
+	
 	content := indexArticle.Content
 	i := bytes.Index(content, IndexContentStart)
 	if i < 0 {
@@ -148,7 +167,7 @@ func must101Articles(root string, indexArticle *Article) (articles []*Article) {
 	if i >= 0 {
 		content = content[:i]
 	}
-
+	
 	var buf bytes.Buffer
 	for range [1000]struct{}{} {
 		i = bytes.Index(content, LineToRemoveTag)
@@ -173,6 +192,7 @@ func must101Articles(root string, indexArticle *Article) (articles []*Article) {
 
 	// find all articles from links
 	content = indexArticle.Content
+	chapter := 0
 	for range [1000]struct{}{} {
 		i = bytes.Index(content, Anchor)
 		if i < 0 {
@@ -184,8 +204,23 @@ func must101Articles(root string, indexArticle *Article) (articles []*Article) {
 			break
 		}
 
-		article := mustArticle(root, ArticlesFolder, string(content[:i]))
+		article := mustArticle(engVersion, chapter, root, ArticlesFolder, string(content[:i]))
 		articles = append(articles, article)
+		chapter++
+		
+		if i := strings.Index(article.Filename, ".html"); i >= 0 {
+			filename := article.Filename
+			internalFilename := []byte(strings.ReplaceAll(filename, ".html", ".xhtml"))
+			//internalFilename := href[:i]
+			if internalFilename[0] >= '0' && internalFilename[0] <= '9' {
+				internalFilename = append([]byte("go"), internalFilename...)
+			}
+			
+			article.internalFilename = internalFilename
+			
+			chapterMapping[article.Filename] = article
+			//log.Println(article.Filename, ":", string(article.internalFilename))
+		}
 
 		content = content[i+len(_Anchor):]
 	}
@@ -193,7 +228,61 @@ func must101Articles(root string, indexArticle *Article) (articles []*Article) {
 	return
 }
 
+/*
+func collectInternalArticles(content []byte) map[string][]byte {
+	var m = make(map[string][]byte)
 
+	for range [1000]struct{}{} {
+		aStart := find(content, 0, A)
+		if aStart < 0 {
+			break
+		}
+		index := aStart+len(A)
+
+		end := find(content, index, []byte(">"))
+		if end < 0 {
+			fatalError("a tag is incomplete", content[aStart:])
+		}
+		end++
+
+		hrefStart := find(content[:end], index, Href)
+		if hrefStart < 0 {
+			//fatalError("a tag has not href", content[aStart:])
+			content = content[end:]
+			continue
+		}
+		hrefStart += len(Href)
+
+		quotaStart := find(content[:end], hrefStart, []byte(`"`))
+		if quotaStart < 0 {
+			fatalError("a href is incomplete", content[aStart:])
+		}
+		quotaStart++
+
+		quotaEnd := find(content[:end], quotaStart, []byte(`"`))
+		if quotaEnd < 0 {
+			fatalError("a href is incomplete", content[aStart:])
+		}
+
+		href := bytes.TrimSpace(content[quotaStart:quotaEnd])
+		if bytes.HasPrefix(href, []byte("http")) {
+			
+		} else if i := bytes.Index(href, []byte(".html")); i >= 0 {
+			filename := string(href[:i+len(".html")])
+			internalFilename := []byte(strings.ReplaceAll(filename, ".html", ".xhtml"))
+			//internalFilename := href[:i]
+			if internalFilename[0] >= '0' && internalFilename[0] <= '9' {
+				internalFilename = append([]byte("go"), internalFilename...)
+			}
+			m[filename] = internalFilename
+		}
+
+		content = content[end:]
+	}
+	
+	return m
+}
+*/
 
 func find(content []byte, start int, s []byte) int {
 	i := bytes.Index(content[start:], s)
@@ -299,7 +388,7 @@ func escapeCharactorWithinCodeTags(articles []*Article, target string) {
 			
 			// Cancelled for the experience of copy-paste from pdf is bad.
 			// At least, it is a little better to paste spaces than to paste nothing.
-			//if target != "pdf" {
+			//if target != "pdf" && target != "print" {
 				// for pdf, keep tabs
 				temp = strings.ReplaceAll(temp, "\t", tabSpaces)
 			//}
@@ -323,7 +412,7 @@ func escapeCharactorWithinCodeTags(articles []*Article, target string) {
 				buf.Write(content[codeClose:preEnd])
 			} else {
 				switch target {
-				case "epub", "pdf", "apple":
+				case "epub", "apple", "pdf", "print":
 					mustLineNumbers = true
 					fallthrough
 				case "azw3":
@@ -500,7 +589,9 @@ func replaceImageSources(articles []*Article, imagePaths map[string]string, rewa
 
 var A, _A, Href = []byte(`<a`),  []byte(`</a>`), []byte(`href`)
 
-func replaceInternalLinks(articles []*Article, internalArticles map[string][]byte, bookWebsite string) {
+var linkFmtPatterns = map[bool]string{true: " (%s)", false: "（%s）"}
+
+func replaceInternalLinks(articles []*Article, chapterMapping map[string]*Article, bookWebsite string, forPrint, engVersion bool) {
 	for _, article := range articles {
 		content := article.Content
 		var buf = bytes.NewBuffer(make([]byte, 0, len(content) + 10000))
@@ -511,54 +602,83 @@ func replaceInternalLinks(articles []*Article, internalArticles map[string][]byt
 			}
 			index := aStart+len(A)
 
-			end := find(content, index, []byte(">"))
-			if end < 0 {
-				fatalError("a tag is incomplete in article:" + article.Filename, content[aStart:])
+			aClose := find(content, index, _A)
+			if aClose < 0 {
+				fatalError("a href is not closed in article:" + article.Filename, content[aStart:])
 			}
-			end++
+			aEnd := aClose + len(_A)
 
-			hrefStart := find(content[:end], index, Href)
+			//openEnd := find(content, index, []byte(">"))
+			//if openEnd < 0 {
+			//	fatalError("a tag is incomplete in article:" + article.Filename, content[aStart:])
+			//}
+			//openEnd++
+
+			hrefStart := find(content[:aEnd], index, Href)
 			if hrefStart < 0 {
 				//fatalError("a tag has not href in article:" + article.Filename, content[aStart:])
-				buf.Write(content[:end])
-				content = content[end:]
+				buf.Write(content[:aEnd])
+				content = content[aEnd:]
 				continue
 			}
 			hrefStart += len(Href)
 
-			quotaStart := find(content[:end], hrefStart, []byte(`"`))
+			quotaStart := find(content[:aEnd], hrefStart, []byte(`"`))
 			if quotaStart < 0 {
 				fatalError("a href is incomplete in article:" + article.Filename, content[aStart:])
 			}
 			quotaStart++
 
-			quotaEnd := find(content[:end], quotaStart, []byte(`"`))
+			quotaEnd := find(content[:aEnd], quotaStart, []byte(`"`))
 			if quotaEnd < 0 {
 				fatalError("a href is incomplete in article:" + article.Filename, content[aStart:])
 			}
 
 			href := bytes.TrimSpace(content[quotaStart:quotaEnd])
+			done := false
 			if bytes.HasPrefix(href, []byte("http")) {
-				buf.Write(content[:end])
+				//buf.Write(content[:aEnd])
 			} else if i := bytes.Index(href, []byte(".html")); i >= 0 {
+				done = true
+				
 				var newHref []byte
 				filename := string(href[:i+len(".html")])
 				
-				if internalName, present := internalArticles[filename]; present {
+				linkArticle := chapterMapping[filename]
+				if linkArticle != nil {
 					//newHref = bytes.ReplaceAll(href, []byte(".html"), []byte(internalName))
-					newHref = internalName
+					newHref = linkArticle.internalFilename
 				} else {
+					log.Println("internal url path", filename, "not found!")
 					newHref = append([]byte(bookWebsite + "/article/"), href...)
 				}
 			
-				buf.Write(content[:quotaStart])
-				buf.Write(newHref)
-				buf.Write(content[quotaEnd:end])
+				
+				if article.Filename == "101.html" {
+					buf.Write(content[:aStart])
+					buf.WriteString(linkArticle.chapter2)
+					buf.Write(content[aStart:quotaStart])
+					buf.Write(newHref)
+					buf.Write(content[quotaEnd:aEnd])
+				} else {
+					buf.Write(content[:quotaStart])
+					buf.Write(newHref)
+					buf.Write(content[quotaEnd:aEnd])
+					buf.WriteString(linkArticle.chapter)
+				}
 			} else {
-				buf.Write(content[:end])
+				//buf.Write(content[:aEnd])
+			}
+			if !done {
+				if forPrint {
+					buf.Write(content[:aEnd])
+					fmt.Fprintf(buf, linkFmtPatterns[engVersion], href)
+				} else {
+					buf.Write(content[:aEnd])
+				}
 			}
 
-			content = content[end:]
+			content = content[aEnd:]
 		}
 		buf.Write(content)
 		article.Content = buf.Bytes()
@@ -666,60 +786,6 @@ func filterArticles(content []byte, bookId int) []byte {
 	}
 	buf.Write(content)
 	return buf.Bytes()
-}
-
-func collectInternalArticles(content []byte) map[string][]byte {
-	var m = make(map[string][]byte)
-
-	for range [1000]struct{}{} {
-		aStart := find(content, 0, A)
-		if aStart < 0 {
-			break
-		}
-		index := aStart+len(A)
-
-		end := find(content, index, []byte(">"))
-		if end < 0 {
-			fatalError("a tag is incomplete", content[aStart:])
-		}
-		end++
-
-		hrefStart := find(content[:end], index, Href)
-		if hrefStart < 0 {
-			//fatalError("a tag has not href", content[aStart:])
-			content = content[end:]
-			continue
-		}
-		hrefStart += len(Href)
-
-		quotaStart := find(content[:end], hrefStart, []byte(`"`))
-		if quotaStart < 0 {
-			fatalError("a href is incomplete", content[aStart:])
-		}
-		quotaStart++
-
-		quotaEnd := find(content[:end], quotaStart, []byte(`"`))
-		if quotaEnd < 0 {
-			fatalError("a href is incomplete", content[aStart:])
-		}
-
-		href := bytes.TrimSpace(content[quotaStart:quotaEnd])
-		if bytes.HasPrefix(href, []byte("http")) {
-			
-		} else if i := bytes.Index(href, []byte(".html")); i >= 0 {
-			filename := string(href[:i+len(".html")])
-			internalFilename := []byte(strings.ReplaceAll(filename, ".html", ".xhtml"))
-			//internalFilename := href[:i]
-			if internalFilename[0] >= '0' && internalFilename[0] <= '9' {
-				internalFilename = append([]byte("go"), internalFilename...)
-			}
-			m[filename] = internalFilename
-		}
-
-		content = content[end:]
-	}
-	
-	return m
 }
 
 func hintExternalLinks(articles []*Article, externalLinkPngPath string) {

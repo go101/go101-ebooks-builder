@@ -12,6 +12,7 @@ func genetateAppleFile(bookProjectDir, bookVersion string) string {
 	var outFilename string
 	var indexArticleTitle string
 	var bookWebsite string
+	var engVersion bool
 	
 	projectName := confirmBookProjectName(bookProjectDir)
 	switch projectName {
@@ -22,12 +23,14 @@ func genetateAppleFile(bookProjectDir, bookVersion string) string {
 		e.SetAuthor("Tapir Liu")
 		indexArticleTitle = "Contents"
 		bookWebsite = "https://go101.org"
+		engVersion = true
 		outFilename = "Go101-" + bookVersion + ".apple.epub"
 	case "Golang101":
 		e = epub.NewEpub("Go语言101")
 		e.SetAuthor("老貘")
 		indexArticleTitle = "目录"
 		bookWebsite = "https://gfw.go101.org"
+		engVersion = false
 		outFilename = "Golang101-" + bookVersion + ".apple.epub"
 	}
 	
@@ -39,7 +42,7 @@ func genetateAppleFile(bookProjectDir, bookVersion string) string {
 		log.Fatalln("add css", cssFilename, "failed:", err)
 	}
 
-	writeEpub_Go101(outFilename, e, -1, bookWebsite, projectName, indexArticleTitle, bookProjectDir, cssPath, "apple")
+	writeEpub_Go101(outFilename, e, -1, bookWebsite, projectName, indexArticleTitle, bookProjectDir, cssPath, "apple", engVersion)
 	log.Println("Create", outFilename, "done!")
 	
 	return outFilename

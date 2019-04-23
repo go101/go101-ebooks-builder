@@ -199,7 +199,7 @@ h4 {
 }
 `
 
-const PdfCSS = CommonCSS + `
+const PdfCommonCSS = CommonCSS + `
 
 pre > code {
        text-align: left;
@@ -212,11 +212,6 @@ pre {
        padding: 3px 6px;
        margin-left: 0px;
        margin-right: 0px;
-}
-
-a[href*='//']::after {
-	content: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAQElEQVR42qXKwQkAIAxDUUdxtO6/RBQkQZvSi8I/pL4BoGw/XPkh4XigPmsUgh0626AjRsgxHTkUThsG2T/sIlzdTsp52kSS1wAAAABJRU5ErkJggg==);
-	margin: 0 3px 0 5px;
 }
 
 
@@ -242,6 +237,24 @@ h4 {
 .content {
        font-size: 15px;
        line-height: 150%;
+}
+`
+
+const PdfCSS = PdfCommonCSS + `
+
+a[href*='//']::after {
+	content: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAQElEQVR42qXKwQkAIAxDUUdxtO6/RBQkQZvSi8I/pL4BoGw/XPkh4XigPmsUgh0626AjRsgxHTkUThsG2T/sIlzdTsp52kSS1wAAAABJRU5ErkJggg==);
+	margin: 0 3px 0 5px;
+}
+`
+
+const PrintCSS = PdfCommonCSS + `
+
+h3 {
+	padding-bottom: 2px;
+	border-bottom: 2px solid #333;
+	padding-left: 3px;
+	border-left: 6px solid #333;
 }
 `
 

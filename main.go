@@ -10,7 +10,7 @@ import (
 
 var bookProjectDirFlag = flag.String("book-project-dir", "", "the path to the book project")
 var bookVersionFlag = flag.String("book-version", "", "the version of the book")
-var targetFlag = flag.String("target", "all", "output target (epub | azw3 | mobi | pdf | apple | all)")
+var targetFlag = flag.String("target", "all", "output target (epub | azw3 | mobi | apple | pdf | print | all)")
 
 // Go 101:
 // export BookVersion=v1.12.a
@@ -53,16 +53,19 @@ func main() {
 		genetateAzw3File(bookProjectDir, bookVersion)
 	case "mobi":
 		genetateMobiFile(bookProjectDir, bookVersion)
-	case "pdf":
-		genetatePdfFile(bookProjectDir, bookVersion)
 	case "apple":
 		genetateAppleFile(bookProjectDir, bookVersion)
+	case "pdf":
+		genetatePdfFile(bookProjectDir, bookVersion, false)
+	case "print":
+		genetatePdfFile(bookProjectDir, bookVersion, true)
 	case "all", "":
 		genetateAzw3File(bookProjectDir, bookVersion)
 		genetateEpubFile(bookProjectDir, bookVersion)
 		genetateMobiFile(bookProjectDir, bookVersion)
-		genetatePdfFile(bookProjectDir, bookVersion)
 		genetateAppleFile(bookProjectDir, bookVersion)
+		genetatePdfFile(bookProjectDir, bookVersion, false)
+		genetatePdfFile(bookProjectDir, bookVersion, true)
 	default:
 		log.Fatal("Unknown target:", target)
 	}
