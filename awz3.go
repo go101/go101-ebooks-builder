@@ -77,5 +77,6 @@ func genetateAzw3FileForBook(bookProjectDir, bookVersion string, bookId int) {
 	writeEpub_Go101(tempOutFilename, e, bookId, bookWebsite, projectName, indexArticleTitle, bookProjectDir, cssPath, "azw3", engVersion)
 	
 	runShellCommand(".", "ebook-convert", tempOutFilename, outFilename)
+	runShellCommand(".", "ebook-convert", tempOutFilename, outFilename + ".mobi")
 	log.Println("Create", outFilename, "done!")
 }
