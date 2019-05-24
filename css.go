@@ -1,5 +1,6 @@
 package main
 
+
 /*
 const EpubCSS = `
 .content {
@@ -130,10 +131,39 @@ pre.line-numbers > code:before {
 
 
 
+const Awz3CSS_Chinese = CommonCSS + `
+
+pre > code {
+       font-family: Courier, Futura, "Caecilia Condensed";
+       font-size: 10pt;
+       text-align: left;
+       line-height: 1;
+}
+
+pre.fixed-width > code {
+       font-family: Courier, Futura, "Caecilia Condensed";
+}
+
+pre.fixed-width {
+       font-family: Courier, Futura, "Caecilia Condensed";
+}
+
+pre {
+       padding: 3px 3px;
+       margin-left: 0px;
+       margin-right: 0px;
+}
+
+span.invisible {
+	visibility:hidden
+}
+
+`
+
 const Awz3CSS = CommonCSS + `
 
 pre > code {
-       font-family: Futura, "Caecilia Condensed", Courier;
+       font-family: Courier, Futura, "Caecilia Condensed";
        font-size: 7pt;
        text-align: left;
        line-height: 1;
@@ -255,6 +285,15 @@ h3 {
 	border-bottom: 2px solid #333;
 	padding-left: 3px;
 	border-left: 6px solid #333;
+}
+`
+
+
+const AppleCSS = PdfCSS + `
+
+pre.line-numbers > code:before {
+	content: counter(line)".";
+	border-right: 0;
 }
 `
 

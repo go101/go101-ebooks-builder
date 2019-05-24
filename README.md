@@ -1,9 +1,10 @@
 This project is used to produce Go 101 eBooks.
-The code is this repository is ugly and full of bad practices.
+The code in this repository is ugly and full of bad practices.
 Don't expect to learn something from the code.
 
-```
+
 Program options:
+```
 -book-project-dir : the path to Go 101 book project.
 -book-version : the version of the book, presented in the names of output files.
 -target : output format. [epub | azw3 | mobi | apple | pdf | print | all]

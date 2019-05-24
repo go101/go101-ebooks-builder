@@ -21,6 +21,8 @@ func genetateAzw3FileForBook(bookProjectDir, bookVersion string, bookId int) {
 	var indexArticleTitle string
 	var bookWebsite string
 	var engVersion bool
+	var css string
+	
 	projectName := confirmBookProjectName(bookProjectDir)
 	switch projectName {
 	default:
@@ -42,6 +44,7 @@ func genetateAzw3FileForBook(bookProjectDir, bookVersion string, bookId int) {
 		bookWebsite = "https://go101.org"
 		engVersion = true
 		indexArticleTitle = "Contents"
+		css = Awz3CSS
 	case "Golang101":
 		if bookId == 0 {
 			e = epub.NewEpub("Go语言101")
@@ -59,10 +62,11 @@ func genetateAzw3FileForBook(bookProjectDir, bookVersion string, bookId int) {
 		bookWebsite = "https://gfw.go101.org"
 		engVersion = false
 		indexArticleTitle = "目录"
+		css = Awz3CSS_Chinese
 	}
 	
 	cssFilename := "all.css"
-	tempCssFile := mustCreateTempFile("all*.css", []byte(Awz3CSS))
+	tempCssFile := mustCreateTempFile("all*.css", []byte(css))
 	defer os.Remove(tempCssFile)
 	cssPath, err := e.AddCSS(tempCssFile, cssFilename)
 	if err != nil {

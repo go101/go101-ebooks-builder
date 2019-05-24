@@ -35,7 +35,7 @@ func genetateAppleFile(bookProjectDir, bookVersion string) string {
 	}
 	
 	cssFilename := "all.css"
-	tempCssFile := mustCreateTempFile("all*.css", []byte(PdfCSS))
+	tempCssFile := mustCreateTempFile("all*.css", []byte(AppleCSS))
 	defer os.Remove(tempCssFile)
 	cssPath, err := e.AddCSS(tempCssFile, cssFilename)
 	if err != nil {

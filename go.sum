@@ -2,7 +2,3 @@ github.com/bmaupin/go-epub v0.5.0 h1:ptOZQuO3YBRytuhRPsHUJh5bRmvP66/GvB+NWTC2dyE
 github.com/bmaupin/go-epub v0.5.0/go.mod h1:4RBr0Zo03mRGOyGAcc25eLOqIPCkMbfz+tINVmH6clQ=
 github.com/gofrs/uuid v3.1.0+incompatible h1:q2rtkjaKT4YEr6E1kamy0Ha4RtepWlQBedyHx0uzKwA=
 github.com/gofrs/uuid v3.1.0+incompatible/go.mod h1:b2aQJv3Z4Fp6yNu3cdSllBxTCLRxnplIgP/c0N/04lM=
-github.com/jung-kurt/gofpdf v1.0.2 h1:0cMYuM4+AruonAPfDVJV1+JvHkt+aeBO0D2M2RpSfog=
-github.com/jung-kurt/gofpdf v1.0.2/go.mod h1:7Id9E/uU8ce6rXgefFLlgrJj/GYY22cpxn+r32jIOes=
-github.com/jung-kurt/gofpdf/v2 v2.1.3 h1:iFz1IZdd7cWk6rBKqaZeKk6WUNnTahH6aKDdstjBLeM=
-github.com/jung-kurt/gofpdf/v2 v2.1.3/go.mod h1:RF/RGAP0AS4rd9fVZ6gb7Lbw6178P/AdAxMRW8Kn/Vk=
