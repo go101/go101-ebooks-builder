@@ -26,4 +26,5 @@ $ go run *.go -target=epub -book-version=$BookVersion -book-project-dir=$BookPro
 $ go run *.go -target=azw3 -book-version=$BookVersion -book-project-dir=$BookProjectDir
 $ go run *.go -target=apple -book-version=$BookVersion -book-project-dir=$BookProjectDir
 $ go run *.go -target=print -book-version=$BookVersion -book-project-dir=$BookProjectDir
+$ go run *.go -target=all -book-version=$BookVersion -book-project-dir=$BookProjectDir
 ```
