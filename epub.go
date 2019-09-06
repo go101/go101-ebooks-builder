@@ -1,6 +1,9 @@
 package main
 
 import (
+	"archive/zip"
+	//"bytes"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -184,4 +187,56 @@ func addImages(e *epub.Epub, bookProjectDir string) map[string]string {
 	}
 
 	return imagePaths
+}
+
+func removePageFromEpub(epubFilename string, pagesToRemove ...string) {
+	r, err := zip.OpenReader(epubFilename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer r.Close()
+	
+	os.Remove(epubFilename)
+	
+	outputFile, err := os.Create(epubFilename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer outputFile.Close()
+
+	w := zip.NewWriter(outputFile)
+
+	// Iterate through the files in the archive,
+	// printing some of their contents.
+	for _, f := range r.File {
+		//log.Printf("Contents of %s:\n", f.Name)
+		if f.Name == "EPUB/xhtml/cover.xhtml" {
+			continue
+		}
+		
+		rc, err := f.Open()
+		if err != nil {
+			log.Fatal(err)
+		}
+		
+		of, err := w.Create(f.Name)
+		if err != nil {
+			log.Fatal(err)
+		}
+		
+		_, err = io.Copy(of, rc)
+		if err != nil {
+			log.Fatal(err)
+		}
+		
+		rc.Close()
+		log.Println()
+	}
+	
+	err = w.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+	
+	outputFile.Sync()
 }

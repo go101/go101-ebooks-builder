@@ -279,14 +279,6 @@ h4 {
 //}
 //`
 
-const PdfCSS = PdfCommonCSS + `
-
-a[href*='//']::after {
-	content: "🗗";
-	margin: 0 3px 0 5px;
-}
-`
-
 const PrintCSS = PdfCommonCSS + `
 
 h3 {
@@ -294,6 +286,14 @@ h3 {
 	border-bottom: 2px solid #333;
 	padding-left: 3px;
 	border-left: 6px solid #333;
+}
+`
+
+const PdfCSS = PrintCSS + `
+
+a[href*='//']::after {
+	content: "🗗";
+	margin: 0 3px 0 5px;
 }
 `
 
