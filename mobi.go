@@ -70,10 +70,10 @@ func genetateMobiFileForBook(bookProjectDir, bookVersion string, bookId int) {
 		log.Fatalln("add css", cssFilename, "failed:", err)
 	}
 	
-	//tempOutFilename := outFilename + "*.epub"
-	//tempOutFilename = mustCreateTempFile(tempOutFilename, nil)
-	//defer os.Remove(tempOutFilename)
-	tempOutFilename := outFilename + ".epub"
+	tempOutFilename := outFilename + "*.epub"
+	tempOutFilename = mustCreateTempFile(tempOutFilename, nil)
+	defer os.Remove(tempOutFilename)
+	//tempOutFilename := outFilename + ".epub"
 
 	writeEpub_Go101(tempOutFilename, e, bookId, bookWebsite, projectName, indexArticleTitle, bookProjectDir, cssPath, "mobi", engVersion)
 	println("ebook-convert", tempOutFilename, outFilename)

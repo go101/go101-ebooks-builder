@@ -1,7 +1,8 @@
 This project is used to produce Go 101 eBooks.
 The code in this repository is ugly and full of bad practices.
-Don't expect to learn something from the code.
+Don't expect to learn some good programming habits from the code.
 
+Please install `calibre` before creating ebooks with formats other than epub.
 
 Program options:
 ```

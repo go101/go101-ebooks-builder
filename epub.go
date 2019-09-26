@@ -189,7 +189,7 @@ func addImages(e *epub.Epub, bookProjectDir string) map[string]string {
 	return imagePaths
 }
 
-func removePageFromEpub(epubFilename string, pagesToRemove ...string) {
+func removePagesFromEpub(epubFilename string, pagesToRemove ...string) {
 	r, err := zip.OpenReader(epubFilename)
 	if err != nil {
 		log.Fatal(err)
@@ -205,12 +205,17 @@ func removePageFromEpub(epubFilename string, pagesToRemove ...string) {
 	defer outputFile.Close()
 
 	w := zip.NewWriter(outputFile)
+	
+	shouldRemove := map[string]bool{}
+	for _, page := range pagesToRemove {
+		shouldRemove[page] = true
+	}
 
 	// Iterate through the files in the archive,
 	// printing some of their contents.
 	for _, f := range r.File {
 		//log.Printf("Contents of %s:\n", f.Name)
-		if f.Name == "EPUB/xhtml/cover.xhtml" {
+		if shouldRemove[f.Name] {
 			continue
 		}
 		

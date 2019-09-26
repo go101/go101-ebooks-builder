@@ -177,6 +177,7 @@ func genetatePdfFile(bookProjectDir, bookVersion string, forPrint bool) string {
 		log.Fatalln("add css", cssFilename, "failed:", err)
 	}
 	
+	// ...
 	tempOutFilename := outFilename + "*.epub"
 	tempOutFilename = mustCreateTempFile(tempOutFilename, nil)
 	defer os.Remove(tempOutFilename)
@@ -184,23 +185,23 @@ func genetatePdfFile(bookProjectDir, bookVersion string, forPrint bool) string {
 
 	writeEpub_Go101(tempOutFilename, e, -1, bookWebsite, projectName, indexArticleTitle, bookProjectDir, cssPath, target, engVersion)
 	
-	removePageFromEpub(tempOutFilename)
+	removePagesFromEpub(tempOutFilename, "EPUB/xhtml/cover.xhtml")
 	
-	epub2pdf := func(serifFont, outputFilename string) {
+	epub2pdf := func(serifFont, fontSize, inputFilename, outputFilename string) {
 		conversionParameters := make([]string, 0, 32)
 		pushParams := func (params ...string) {
 			conversionParameters = append(conversionParameters, params...)
 		}
-		pushParams(tempOutFilename, outputFilename)
+		pushParams(inputFilename, outputFilename)
 		pushParams("--toc-title", indexArticleTitle)
-		pushParams("--pdf-header-template", `'<p style="text-align:center; font-size: small;">_SECTION_</p>'`)
-		pushParams("--pdf-footer-template", `'<p style="text-align:center; font-size: small;">_PAGENUM_</p>'`)
+		pushParams("--pdf-header-template", `'<div style="text-align: center; padding-top: -9px; font-size: small;">_SECTION_</div>'`)
+		pushParams("--pdf-footer-template", `'<div style="text-align: center; padding-top: -9px; font-size: small;">_PAGENUM_</div>'`)
 		//pushParams("--pdf-page-numbers")
 		pushParams("--paper-size", "a4")
 		pushParams("--pdf-serif-family", serifFont)
 		//pushParams("--pdf-sans-family", serifFont)
 		pushParams("--pdf-mono-family", "Liberation Mono")
-		pushParams("--pdf-default-font-size", "16")
+		pushParams("--pdf-default-font-size", fontSize)
 		pushParams("--pdf-mono-font-size", "15")
 		pushParams("--pdf-page-margin-top", "36")
 		pushParams("--pdf-page-margin-bottom", "36")
@@ -222,19 +223,19 @@ func genetatePdfFile(bookProjectDir, bookVersion string, forPrint bool) string {
 	if forPrint {
 		outFilenameForPrinting := strings.Replace(outFilename, ".pdf", ".pdf-ForPrinting.pdf", 1)
 		if projectName == "Go101" {
-			epub2pdf("Liberation Serif", outFilenameForPrinting)
+			epub2pdf("Liberation Serif", "17", tempOutFilename, outFilenameForPrinting)
 		} else if projectName == "Golang101" {
-			epub2pdf("AR PL SungtiL GB", outFilenameForPrinting)
+			epub2pdf("AR PL SungtiL GB", "16", tempOutFilename, outFilenameForPrinting)
 		}
 	} else {
 		if projectName == "Go101" {
-			epub2pdf("Liberation Serif", outFilename)
+			epub2pdf("Liberation Serif", "17", tempOutFilename, outFilename)
 		} else if projectName == "Golang101" {
 			outFilenameKaiTi := strings.Replace(outFilename, ".pdf", ".pdf-KaiTi.pdf", 1)
-			epub2pdf("AR PL KaitiM GB", outFilenameKaiTi)
+			epub2pdf("AR PL KaitiM GB", "16", tempOutFilename, outFilenameKaiTi)
 			
 			outFilenameSongTi := strings.Replace(outFilename, ".pdf", ".pdf-SongTi.pdf", 1)
-			epub2pdf("AR PL SungtiL GB", outFilenameSongTi)
+			epub2pdf("AR PL SungtiL GB", "16", tempOutFilename, outFilenameSongTi)
 		}
 	}      
 	
