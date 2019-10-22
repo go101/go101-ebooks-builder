@@ -6,41 +6,19 @@ import (
 	"io"
 	"log"
 	"os"
-	"strings"
 	"path/filepath"
+	"strings"
 
 	"github.com/bmaupin/go-epub"
 )
 
-/*
-.mobi file
-* bgcolor
-* <div class="text-center">
-  =>
-  <div align=center>
-* vspace=1 hspace=1
-
-:not(pre) > code {
-       padding: 1px 2px;
-       background-color: #dbdbdb;
-}
-
-pre {
-       padding: 3px 6px;
-       margin-left: 0px;
-       margin-right: 0px;
-}
-
-ebook-convert "book.epub" "book.mobi"
-*/
-
-func genetateEpubFile(bookProjectDir, bookVersion string) string {
+func genetateEpubFile(bookProjectDir, bookVersion, coverImagePath string) string {
 	var e *epub.Epub
 	var outFilename string
 	var indexArticleTitle string
 	var bookWebsite string
 	var engVersion bool
-	
+
 	projectName := confirmBookProjectName(bookProjectDir)
 	switch projectName {
 	default:
@@ -60,7 +38,7 @@ func genetateEpubFile(bookProjectDir, bookVersion string) string {
 		engVersion = false
 		outFilename = "Golang101-" + bookVersion + ".epub"
 	}
-	
+
 	cssFilename := "all.css"
 	tempCssFile := mustCreateTempFile("all*.css", []byte(EpubCSS))
 	defer os.Remove(tempCssFile)
@@ -69,37 +47,37 @@ func genetateEpubFile(bookProjectDir, bookVersion string) string {
 		log.Fatalln("add css", cssFilename, "failed:", err)
 	}
 
-	writeEpub_Go101(outFilename, e, -1, bookWebsite, projectName, indexArticleTitle, bookProjectDir, cssPath, "epub", engVersion)
+	writeEpub_Go101(outFilename, e, -1, bookWebsite, projectName, indexArticleTitle, bookProjectDir, coverImagePath, cssPath, "epub", engVersion)
 	log.Println("Create", outFilename, "done!")
-	
+
 	return outFilename
 }
 
 const (
-	LienNumbers_Manually      = iota
+	LienNumbers_Manually = iota
 	LienNumbers_Unchange
 	LienNumbers_Selectable
 	LienNumbers_Automatically
 )
 
 // zero bookId means all.
-func writeEpub_Go101(outputFilename string, e *epub.Epub, bookId int, bookWebsite, projectName, indexArticleTitle, bookProjectDir, cssPath, target string, engVersion bool) {
-	imagePaths := addImages(e, bookProjectDir)
+func writeEpub_Go101(outputFilename string, e *epub.Epub, bookId int, bookWebsite, projectName, indexArticleTitle, bookProjectDir, coverImagePath, cssPath, target string, engVersion bool) {
+	imagePaths, coverImagePathInEpub := addImages(e, bookProjectDir, coverImagePath)
 	var rewardImage string
 	if projectName == "Golang101" {
-		rewardImage = "res/101-reward-qrcode-2.png"
+		rewardImage = "res/101-reward-qrcode-5.png"
 	}
-	
+
 	index, articles, chapterMapping := mustArticles(bookProjectDir, engVersion)
 	index.Title = indexArticleTitle
-	index.Content = append([]byte("<h1>" + index.Title + "</h1>"), index.Content...)
-	
+	index.Content = append([]byte("<h1>"+index.Title+"</h1>"), index.Content...)
+
 	if bookId > 0 {
 		index.Content = filterArticles(index.Content, bookId)
 	}
 	//internalArticles := collectInternalArticles(index.Content)
-	//log.Println("internalArticles:", internalArticles)	
-	
+	//log.Println("internalArticles:", internalArticles)
+
 	oldArticles := articles
 	articles = nil
 	for _, article := range oldArticles {
@@ -118,7 +96,7 @@ func writeEpub_Go101(outputFilename string, e *epub.Epub, bookId int, bookWebsit
 		fallthrough
 	case "mobi": // mobi
 		setHtml32Atributes(articles)
-		
+
 		pngFilename := "external-link.png"
 		tempPngFile := mustCreateTempFile("external-link*.png", mustParseImageData(ExternalLinkPNG))
 		defer os.Remove(tempPngFile)
@@ -127,17 +105,17 @@ func writeEpub_Go101(outputFilename string, e *epub.Epub, bookId int, bookWebsit
 			log.Fatalln("add image", pngFilename, "failed:", err)
 		}
 		imagePaths[pngFilename] = imgpath
-		
+
 		hintExternalLinks(articles, imgpath)
 	case "apple":
 		removeXhtmlAttributes(articles)
 	default:
 	}
-	
+
 	wrapContentDiv(articles)
 
 	// ...
-	e.SetCover(imagePaths["res/101-front-cover-1400x.jpg"], "")
+	e.SetCover(coverImagePathInEpub, "")
 
 	for _, article := range articles {
 		internalFilename := string(article.internalFilename)
@@ -149,7 +127,7 @@ func writeEpub_Go101(outputFilename string, e *epub.Epub, bookId int, bookWebsit
 	}
 }
 
-func addImages(e *epub.Epub, bookProjectDir string) map[string]string {
+func addImages(e *epub.Epub, bookProjectDir, coverImagePath string) (map[string]string, string) {
 	imagePaths := make(map[string]string)
 
 	root := filepath.Join(bookProjectDir, ArticlesFolder, "res")
@@ -162,14 +140,15 @@ func addImages(e *epub.Epub, bookProjectDir string) map[string]string {
 		}
 		//log.Printf("visited file or dir: %q\n", path)
 		if !info.IsDir() {
-			index := strings.Index(path, "res/")
+			index := strings.Index(path, "res"+string(filepath.Separator))
 			imgsrc := path[index:]
 			filename := filepath.Base(path)
 			lower := strings.ToLower(imgsrc)
-			if strings.HasSuffix(lower, ".png") ||
-				strings.HasSuffix(lower, ".gif") ||
-				strings.HasSuffix(lower, ".jpg") ||
-				strings.HasSuffix(lower, ".jpeg") {
+			if strings.Index(filename, "front-cover") < 0 &&
+				(strings.HasSuffix(lower, ".png") ||
+					strings.HasSuffix(lower, ".gif") ||
+					strings.HasSuffix(lower, ".jpg") ||
+					strings.HasSuffix(lower, ".jpeg")) {
 				imgpath, err := e.AddImage(path, filename)
 				if err != nil {
 					log.Fatalln("add image", filename, "failed:", err)
@@ -186,7 +165,18 @@ func addImages(e *epub.Epub, bookProjectDir string) map[string]string {
 		log.Fatalln("list article res image files error:", err)
 	}
 
-	return imagePaths
+	// Cover image
+	var coverImagePathInEpub string
+	{
+		filename := filepath.Base(coverImagePath)
+		imgpath, err := e.AddImage(coverImagePath, filename)
+		if err != nil {
+			log.Fatalln("add cover image", filename, "failed:", err)
+		}
+		coverImagePathInEpub = imgpath
+	}
+
+	return imagePaths, coverImagePathInEpub
 }
 
 func removePagesFromEpub(epubFilename string, pagesToRemove ...string) {
@@ -195,9 +185,9 @@ func removePagesFromEpub(epubFilename string, pagesToRemove ...string) {
 		log.Fatal(err)
 	}
 	defer r.Close()
-	
+
 	os.Remove(epubFilename)
-	
+
 	outputFile, err := os.Create(epubFilename)
 	if err != nil {
 		log.Fatal(err)
@@ -205,7 +195,7 @@ func removePagesFromEpub(epubFilename string, pagesToRemove ...string) {
 	defer outputFile.Close()
 
 	w := zip.NewWriter(outputFile)
-	
+
 	shouldRemove := map[string]bool{}
 	for _, page := range pagesToRemove {
 		shouldRemove[page] = true
@@ -218,30 +208,30 @@ func removePagesFromEpub(epubFilename string, pagesToRemove ...string) {
 		if shouldRemove[f.Name] {
 			continue
 		}
-		
+
 		rc, err := f.Open()
 		if err != nil {
 			log.Fatal(err)
 		}
-		
+
 		of, err := w.Create(f.Name)
 		if err != nil {
 			log.Fatal(err)
 		}
-		
+
 		_, err = io.Copy(of, rc)
 		if err != nil {
 			log.Fatal(err)
 		}
-		
+
 		rc.Close()
 		log.Println()
 	}
-	
+
 	err = w.Close()
 	if err != nil {
 		log.Fatal(err)
 	}
-	
+
 	outputFile.Sync()
 }

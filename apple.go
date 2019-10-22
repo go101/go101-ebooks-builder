@@ -7,13 +7,13 @@ import (
 	"github.com/bmaupin/go-epub"
 )
 
-func genetateAppleFile(bookProjectDir, bookVersion string) string {
+func genetateAppleFile(bookProjectDir, bookVersion, coverImagePath string) string {
 	var e *epub.Epub
 	var outFilename string
 	var indexArticleTitle string
 	var bookWebsite string
 	var engVersion bool
-	
+
 	projectName := confirmBookProjectName(bookProjectDir)
 	switch projectName {
 	default:
@@ -33,7 +33,7 @@ func genetateAppleFile(bookProjectDir, bookVersion string) string {
 		engVersion = false
 		outFilename = "Golang101-" + bookVersion + ".apple.epub"
 	}
-	
+
 	cssFilename := "all.css"
 	tempCssFile := mustCreateTempFile("all*.css", []byte(AppleCSS))
 	defer os.Remove(tempCssFile)
@@ -42,8 +42,8 @@ func genetateAppleFile(bookProjectDir, bookVersion string) string {
 		log.Fatalln("add css", cssFilename, "failed:", err)
 	}
 
-	writeEpub_Go101(outFilename, e, -1, bookWebsite, projectName, indexArticleTitle, bookProjectDir, cssPath, "apple", engVersion)
+	writeEpub_Go101(outFilename, e, -1, bookWebsite, projectName, indexArticleTitle, bookProjectDir, coverImagePath, cssPath, "apple", engVersion)
 	log.Println("Create", outFilename, "done!")
-	
+
 	return outFilename
 }

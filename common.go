@@ -3,8 +3,8 @@ package main
 import (
 	"bytes"
 	"encoding/base64"
-	"io/ioutil"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -13,12 +13,8 @@ import (
 	"strings"
 )
 
-
-	
-
-
 func confirmBookProjectName(bookProjectDir string) string {
-	checkFileExistence := func (filename string) bool {
+	checkFileExistence := func(filename string) bool {
 		info, err := os.Stat(filepath.Join(bookProjectDir, filename))
 		return err == nil && !info.IsDir()
 	}
@@ -36,14 +32,14 @@ func mustCreateTempFile(pattern string, content []byte) string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	
+
 	if _, err := tmpfile.Write(content); err != nil {
 		log.Fatal(err)
 	}
 	if err := tmpfile.Close(); err != nil {
 		log.Fatal(err)
 	}
-	
+
 	return tmpfile.Name()
 }
 
@@ -56,15 +52,29 @@ func mustParseImageData(s string) []byte {
 }
 
 func runShellCommand(rootPath, cmd string, args ...string) {
+	runShellCommand2(false, rootPath, cmd, args...)
+}
+
+func runShellCommand2(needOutput bool, rootPath, cmd string, args ...string) []byte {
 	log.Println(append([]string{cmd}, args...))
-	
+
 	command := exec.Command(cmd, args...)
 	command.Stdin = os.Stdin
-	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
-	
-	if err := command.Run(); err != nil {
-		log.Fatal(err)
+	command.Dir = rootPath
+
+	if needOutput {
+		o, err := command.Output()
+		if err != nil {
+			log.Fatal(err)
+		}
+		return o
+	} else {
+		command.Stdout = os.Stdout
+		if err := command.Run(); err != nil {
+			log.Fatal(err)
+		}
+		return nil
 	}
 }
 
@@ -72,7 +82,7 @@ type Article struct {
 	Filename string
 	Title    string
 	Content  []byte
-	
+
 	chapter, chapter2 string
 	internalFilename  []byte
 }
@@ -93,7 +103,7 @@ func mustArticle(engVersion bool, chapterNumber int, root string, pathTokens ...
 	path := filepath.Join(root, filepath.Join(pathTokens...))
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
-		log.Fatalln("read file(" + path + ") error:", err)
+		log.Fatalln("read file("+path+") error:", err)
 	}
 
 	title := retrieveArticleTitle(content)
@@ -112,17 +122,18 @@ func mustArticle(engVersion bool, chapterNumber int, root string, pathTokens ...
 		title = fmt.Sprintf("第%d章：%s", chapterNumber, title)
 	}
 
-	return &Article {
+	return &Article{
 		Filename: pathTokens[len(pathTokens)-1],
 		Title:    title,
 		Content:  content,
-		
+
 		chapter:  chapter,
 		chapter2: chapter2,
 	}
 }
 
 const MaxLen = 128
+
 var H1, _H1 = []byte("<h1>"), []byte("</h1>")
 var TagSigns = [2]rune{'<', '>'}
 
@@ -155,7 +166,7 @@ var IndexContentStart, IndexContentEnd = []byte(`<!-- index starts (don't remove
 
 func must101Articles(root string, indexArticle *Article, engVersion bool) (articles []*Article, chapterMapping map[string]*Article) {
 	chapterMapping = make(map[string]*Article)
-	
+
 	content := indexArticle.Content
 	i := bytes.Index(content, IndexContentStart)
 	if i < 0 {
@@ -167,7 +178,7 @@ func must101Articles(root string, indexArticle *Article, engVersion bool) (artic
 	if i >= 0 {
 		content = content[:i]
 	}
-	
+
 	var buf bytes.Buffer
 	for range [1000]struct{}{} {
 		i = bytes.Index(content, LineToRemoveTag)
@@ -207,7 +218,7 @@ func must101Articles(root string, indexArticle *Article, engVersion bool) (artic
 		article := mustArticle(engVersion, chapter, root, ArticlesFolder, string(content[:i]))
 		articles = append(articles, article)
 		chapter++
-		
+
 		if i := strings.Index(article.Filename, ".html"); i >= 0 {
 			filename := article.Filename
 			internalFilename := []byte(strings.ReplaceAll(filename, ".html", ".xhtml"))
@@ -215,9 +226,9 @@ func must101Articles(root string, indexArticle *Article, engVersion bool) (artic
 			if internalFilename[0] >= '0' && internalFilename[0] <= '9' {
 				internalFilename = append([]byte("go"), internalFilename...)
 			}
-			
+
 			article.internalFilename = internalFilename
-			
+
 			chapterMapping[article.Filename] = article
 			//log.Println(article.Filename, ":", string(article.internalFilename))
 		}
@@ -266,7 +277,7 @@ func collectInternalArticles(content []byte) map[string][]byte {
 
 		href := bytes.TrimSpace(content[quotaStart:quotaEnd])
 		if bytes.HasPrefix(href, []byte("http")) {
-			
+
 		} else if i := bytes.Index(href, []byte(".html")); i >= 0 {
 			filename := string(href[:i+len(".html")])
 			internalFilename := []byte(strings.ReplaceAll(filename, ".html", ".xhtml"))
@@ -279,7 +290,7 @@ func collectInternalArticles(content []byte) map[string][]byte {
 
 		content = content[end:]
 	}
-	
+
 	return m
 }
 */
@@ -302,7 +313,7 @@ func fatalError(err string, content []byte) {
 
 func wrapContentDiv(articles []*Article) {
 	for _, article := range articles {
-		var buf = bytes.NewBuffer(make([]byte, 0, len(article.Content) + 100))
+		var buf = bytes.NewBuffer(make([]byte, 0, len(article.Content)+100))
 		buf.WriteString(`<div class="content">`)
 		buf.Write(article.Content)
 		buf.WriteString(`</div>`)
@@ -316,7 +327,7 @@ func calLineWidth(line string) int {
 	var lastI int
 	for i, r := range line {
 		if r == '&' {
-			n -= 3;
+			n -= 3
 		}
 		if k := i - lastI; k > 1 {
 			n += 2
@@ -341,12 +352,13 @@ type Commend struct {
 	slashStart int
 	numSpaces  int
 }
+
 var commends [1024]Commend
 
 func escapeCharactorWithinCodeTags(articles []*Article, target string) {
 	for _, article := range articles {
 		content := article.Content
-		var buf = bytes.NewBuffer(make([]byte, 0, len(content) + 10000))
+		var buf = bytes.NewBuffer(make([]byte, 0, len(content)+10000))
 		for range [1000]struct{}{} {
 			preStart := find(content, 0, Pre)
 			if preStart < 0 {
@@ -356,7 +368,7 @@ func escapeCharactorWithinCodeTags(articles []*Article, target string) {
 			index := preStart + len(Pre)
 			preClose := find(content, index, _Pre)
 			if preClose < 0 {
-				fatalError("pre tag is incomplete in article:" + article.Filename, content[index:])
+				fatalError("pre tag is incomplete in article:"+article.Filename, content[index:])
 			}
 			preEnd := preClose + len(_Pre)
 
@@ -369,34 +381,34 @@ func escapeCharactorWithinCodeTags(articles []*Article, target string) {
 
 			programStart := find(content[:preClose], codeStart, []byte(">"))
 			if programStart < 0 {
-				fatalError("code start tag is incomplete in article:" + article.Filename, content[codeStart:])
+				fatalError("code start tag is incomplete in article:"+article.Filename, content[codeStart:])
 			}
 			programStart++
 
 			codeClose := find(content[:preClose], programStart, _Code)
 			if codeClose < 0 {
-				fatalError("code tag doesn't match in article:" + article.Filename, content[:programStart])
+				fatalError("code tag doesn't match in article:"+article.Filename, content[:programStart])
 			}
 
 			codeCloseEnd := find(content[:preClose], codeClose, []byte(">"))
 			if codeCloseEnd < 0 {
-				fatalError("code close tag is incomplete in article:" + article.Filename, content[:preClose])
+				fatalError("code close tag is incomplete in article:"+article.Filename, content[:preClose])
 			}
 			codeCloseEnd++
 
 			temp := string(content[programStart:codeClose])
-			
+
 			// Cancelled for the experience of copy-paste from pdf is bad.
 			// At least, it is a little better to paste spaces than to paste nothing.
 			//if target != "pdf" && target != "print" {
-				// for pdf, keep tabs
-				temp = strings.ReplaceAll(temp, "\t", tabSpaces)
+			// for pdf, keep tabs
+			temp = strings.ReplaceAll(temp, "\t", tabSpaces)
 			//}
-			
+
 			temp = strings.ReplaceAll(temp, "&amp;", "&")
 			temp = strings.ReplaceAll(temp, "&lt;", "<")
 			temp = strings.ReplaceAll(temp, "&gt;", ">")
-			
+
 			temp = strings.ReplaceAll(temp, "&", "&amp;")
 			temp = strings.ReplaceAll(temp, "<", "&lt;")
 			temp = strings.ReplaceAll(temp, ">", "&gt;")
@@ -404,7 +416,7 @@ func escapeCharactorWithinCodeTags(articles []*Article, target string) {
 			var mustLineNumbers = bytes.Index(content[preStart:codeStart], []byte("must-line-numbers")) >= 0
 			var disableLineNumbers = bytes.Index(content[preStart:codeStart], []byte("disable-line-numbers111")) >= 0 ||
 				bytes.Index(content[preStart:codeStart], []byte("must-not-line-numbers-on-kindle")) >= 0
-			if disableLineNumbers  {
+			if disableLineNumbers {
 				buf.Write(content[:preStart])
 				buf.Write(bytes.ReplaceAll(content[preStart:codeStart], []byte("line-numbers"), []byte("xxx-yyy")))
 				buf.Write(content[codeStart:programStart])
@@ -419,7 +431,7 @@ func escapeCharactorWithinCodeTags(articles []*Article, target string) {
 					mustLineNumbers = true // still better to have line numbers
 					if mustLineNumbers {
 						buf.Write(content[:codeStart])
-						
+
 						lines := strings.Split(temp, "\n")
 						if strings.TrimSpace(lines[len(lines)-1]) == "" {
 							lines = lines[:len(lines)-1]
@@ -434,12 +446,12 @@ func escapeCharactorWithinCodeTags(articles []*Article, target string) {
 							}
 							buf.WriteString(line)
 							buf.WriteString("</code>\n")
-							
+
 							if n := calLineWidth(line); n > 62 {
 								log.Println("  ", n, ":", line)
 							}
 						}
-						
+
 						buf.Write(content[codeCloseEnd:preEnd])
 					} else {
 						buf.Write(content[:preStart])
@@ -448,7 +460,7 @@ func escapeCharactorWithinCodeTags(articles []*Article, target string) {
 						buf.WriteString(temp)
 						buf.Write(content[codeClose:preEnd])
 					}
-					
+
 				case "mobi":
 					buf.Write(content[:programStart])
 					lines := strings.Split(temp, "\n")
@@ -467,46 +479,45 @@ func escapeCharactorWithinCodeTags(articles []*Article, target string) {
 						}
 						buf.WriteString(line)
 						buf.WriteString("\n")
-						
-						
+
 						if n := calLineWidth(line); n > 62 {
 							log.Println("  ", n, ":", line)
 						}
 					}
 					buf.Write(content[codeClose:preEnd])
-				/*
-				default: // LienNumbers_Manually // epub
-					linecount := strings.Count(temp, "\n")
-					if linecount > 0 && temp[len(temp)-1] != '\n' {
-						linecount++
-					}
-					var b strings.Builder
-					for i := 1; i <= linecount; i++ {
-						fmt.Fprintf(&b, "%d.", i)
-						if i < linecount {
-							fmt.Fprint(&b, "\n")
-						}
-					}
-					buf.Write(content[:preStart])
-					buf.WriteString(`
-						<table class="table code" style="border-spacing:1px; border-collapse: collapse; width: 100%;">
-						<tr>
-						<td style="text-align: right; width: auto;">
-						<pre class="line-numbers"><code class="language-go">`)
-					buf.WriteString(b.String())
-					buf.WriteString(`</code></pre>
-						</td>
-						<td style="width: 100%;">
-					`)
-					buf.Write(content[preStart:programStart])
-					buf.WriteString(temp)
-					buf.Write(content[codeClose:preEnd])
-					buf.WriteString(`
-						</td>
-						</tr>
-						</table>
-					`)
-				*/
+					/*
+						default: // LienNumbers_Manually // epub
+							linecount := strings.Count(temp, "\n")
+							if linecount > 0 && temp[len(temp)-1] != '\n' {
+								linecount++
+							}
+							var b strings.Builder
+							for i := 1; i <= linecount; i++ {
+								fmt.Fprintf(&b, "%d.", i)
+								if i < linecount {
+									fmt.Fprint(&b, "\n")
+								}
+							}
+							buf.Write(content[:preStart])
+							buf.WriteString(`
+								<table class="table code" style="border-spacing:1px; border-collapse: collapse; width: 100%;">
+								<tr>
+								<td style="text-align: right; width: auto;">
+								<pre class="line-numbers"><code class="language-go">`)
+							buf.WriteString(b.String())
+							buf.WriteString(`</code></pre>
+								</td>
+								<td style="width: 100%;">
+							`)
+							buf.Write(content[preStart:programStart])
+							buf.WriteString(temp)
+							buf.Write(content[codeClose:preEnd])
+							buf.WriteString(`
+								</td>
+								</tr>
+								</table>
+							`)
+					*/
 				}
 			}
 
@@ -522,35 +533,35 @@ var Img, Src = []byte(`<img`), []byte(`src`)
 func replaceImageSources(articles []*Article, imagePaths map[string]string, rewardImage string) {
 	for _, article := range articles {
 		content := article.Content
-		var buf = bytes.NewBuffer(make([]byte, 0, len(content) + 10000))
+		var buf = bytes.NewBuffer(make([]byte, 0, len(content)+10000))
 		for range [1000]struct{}{} {
 			imgStart := find(content, 0, Img)
 			if imgStart < 0 {
 				break
 			}
-			index := imgStart+len(Img)
+			index := imgStart + len(Img)
 
 			end := find(content, index, []byte(">"))
 			if end < 0 {
-				fatalError("img tag is incomplete in article:" + article.Filename, content[imgStart:])
+				fatalError("img tag is incomplete in article:"+article.Filename, content[imgStart:])
 			}
 			end++
 
 			srcStart := find(content[:end], index, Src)
 			if srcStart < 0 {
-				fatalError("img tag has not src in article:" + article.Filename, content[imgStart:])
+				fatalError("img tag has not src in article:"+article.Filename, content[imgStart:])
 			}
 			srcStart += len(Src)
 
 			quotaStart := find(content[:end], srcStart, []byte(`"`))
 			if quotaStart < 0 {
-				fatalError("img src is incomplete in article:" + article.Filename, content[imgStart:])
+				fatalError("img src is incomplete in article:"+article.Filename, content[imgStart:])
 			}
 			quotaStart++
 
 			quotaEnd := find(content[:end], quotaStart, []byte(`"`))
 			if quotaEnd < 0 {
-				fatalError("img src is incomplete in article:" + article.Filename, content[imgStart:])
+				fatalError("img src is incomplete in article:"+article.Filename, content[imgStart:])
 			}
 
 			src := bytes.TrimSpace(content[quotaStart:quotaEnd])
@@ -594,24 +605,24 @@ func replaceImageSources(articles []*Article, imagePaths map[string]string, rewa
 
 }
 
-var A, _A, Href = []byte(`<a`),  []byte(`</a>`), []byte(`href`)
+var A, _A, Href = []byte(`<a`), []byte(`</a>`), []byte(`href`)
 
 var linkFmtPatterns = map[bool]string{true: " (%s)", false: "（%s）"}
 
 func replaceInternalLinks(articles []*Article, chapterMapping map[string]*Article, bookWebsite string, forPrint, engVersion bool) {
 	for _, article := range articles {
 		content := article.Content
-		var buf = bytes.NewBuffer(make([]byte, 0, len(content) + 10000))
+		var buf = bytes.NewBuffer(make([]byte, 0, len(content)+10000))
 		for range [1000]struct{}{} {
 			aStart := find(content, 0, A)
 			if aStart < 0 {
 				break
 			}
-			index := aStart+len(A)
+			index := aStart + len(A)
 
 			aClose := find(content, index, _A)
 			if aClose < 0 {
-				fatalError("a href is not closed in article:" + article.Filename, content[aStart:])
+				fatalError("a href is not closed in article:"+article.Filename, content[aStart:])
 			}
 			aEnd := aClose + len(_A)
 
@@ -632,13 +643,13 @@ func replaceInternalLinks(articles []*Article, chapterMapping map[string]*Articl
 
 			quotaStart := find(content[:aEnd], hrefStart, []byte(`"`))
 			if quotaStart < 0 {
-				fatalError("a href is incomplete in article:" + article.Filename, content[aStart:])
+				fatalError("a href is incomplete in article:"+article.Filename, content[aStart:])
 			}
 			quotaStart++
 
 			quotaEnd := find(content[:aEnd], quotaStart, []byte(`"`))
 			if quotaEnd < 0 {
-				fatalError("a href is incomplete in article:" + article.Filename, content[aStart:])
+				fatalError("a href is incomplete in article:"+article.Filename, content[aStart:])
 			}
 
 			href := bytes.TrimSpace(content[quotaStart:quotaEnd])
@@ -647,20 +658,19 @@ func replaceInternalLinks(articles []*Article, chapterMapping map[string]*Articl
 				//buf.Write(content[:aEnd])
 			} else if i := bytes.Index(href, []byte(".html")); i >= 0 {
 				done = true
-				
+
 				var newHref []byte
 				filename := string(href[:i+len(".html")])
-				
+
 				linkArticle := chapterMapping[filename]
 				if linkArticle != nil {
 					//newHref = bytes.ReplaceAll(href, []byte(".html"), []byte(internalName))
 					newHref = linkArticle.internalFilename
 				} else {
 					log.Println("internal url path", filename, "not found!")
-					newHref = append([]byte(bookWebsite + "/article/"), href...)
+					newHref = append([]byte(bookWebsite+"/article/"), href...)
 				}
-			
-				
+
 				if article.Filename == "101.html" {
 					buf.Write(content[:aStart])
 					buf.WriteString(linkArticle.chapter2)
@@ -697,8 +707,8 @@ func replaceInternalLinks(articles []*Article, chapterMapping map[string]*Articl
   :not(pre) > code {
   =>
   <code bgcolor=#dddddd vspace=1 hspace=1></code>
-  
-  
+
+
   //pre {
   //=>
   //<pre vspace=5></pre>
@@ -707,7 +717,7 @@ func setHtml32Atributes(articles []*Article) {
 
 	for _, article := range articles {
 		content := article.Content
-		var buf = bytes.NewBuffer(make([]byte, 0, len(content) + 10000))
+		var buf = bytes.NewBuffer(make([]byte, 0, len(content)+10000))
 		for range [1000]struct{}{} {
 			codeStart := find(content, 0, Code)
 			if codeStart < 0 {
@@ -718,26 +728,26 @@ func setHtml32Atributes(articles []*Article) {
 				index := preStart + len(Pre)
 				preClose := find(content, index, _Pre)
 				if preClose < 0 {
-					fatalError("pre tag is incomplete in article:" + article.Filename, content[index:])
+					fatalError("pre tag is incomplete in article:"+article.Filename, content[index:])
 				}
 				preEnd := preClose + len(_Pre)
-				
+
 				buf.Write(content[:index])
 				//buf.WriteString(` vspace=5`)
 				buf.Write(content[index:preEnd])
-				
+
 				content = content[preEnd:]
 				continue
 			}
-			
+
 			index := codeStart + len(Code)
 
 			codeClose := find(content, index, _Code)
 			if codeClose < 0 {
-				fatalError("code tag doesn't match in article:" + article.Filename, content[:codeStart])
+				fatalError("code tag doesn't match in article:"+article.Filename, content[:codeStart])
 			}
 			codeEnd := codeClose + len(_Code)
-			
+
 			buf.Write(content[:index])
 			buf.WriteString(` bgcolor="#dddddd" vspace="1" hspace="1"`)
 			buf.Write(content[index:codeEnd])
@@ -749,41 +759,41 @@ func setHtml32Atributes(articles []*Article) {
 	}
 }
 
-var Kindle, _Kindle, CommentEnd = []byte("kindle starts:"),  []byte("kindle ends:"), []byte("-->")
+var Kindle, _Kindle, CommentEnd = []byte("kindle starts:"), []byte("kindle ends:"), []byte("-->")
 
 func filterArticles(content []byte, bookId int) []byte {
-	var buf = bytes.NewBuffer(make([]byte, 0, len(content) + 10000))
-	
+	var buf = bytes.NewBuffer(make([]byte, 0, len(content)+10000))
+
 	for range [1000]struct{}{} {
 		kindleStart := bytes.Index(content, Kindle)
 		if kindleStart < 0 {
 			break
 		}
-		
+
 		index := kindleStart + len(Kindle)
-		
+
 		startEnd := find(content, index, CommentEnd)
 		if startEnd < 0 {
 			fatalError("kindle tag is imcomplete", content[:kindleStart])
 		}
-		
+
 		kindleEnd := find(content, startEnd+len(CommentEnd), _Kindle)
 		if kindleEnd < 0 {
 			fatalError("kindle tag doesn't match a", content[:startEnd])
 		}
-		
-		endEnd := find(content, kindleEnd + len(_Kindle), CommentEnd)
+
+		endEnd := find(content, kindleEnd+len(_Kindle), CommentEnd)
 		if endEnd < 0 {
 			fatalError("kindle tag doesn't match b", content[:kindleEnd])
 		}
 		endEnd += len(CommentEnd)
-		
+
 		idStr := string(bytes.TrimSpace(content[index:startEnd]))
 		n, err := strconv.Atoi(idStr)
 		if err != nil {
-			fatalError("bad kindle book id: " + idStr + ". " + err.Error(), content[:endEnd])
+			fatalError("bad kindle book id: "+idStr+". "+err.Error(), content[:endEnd])
 		}
-		
+
 		if n == bookId {
 			buf.Write(content[:endEnd])
 		} else {
@@ -797,20 +807,20 @@ func filterArticles(content []byte, bookId int) []byte {
 
 func hintExternalLinks(articles []*Article, externalLinkPngPath string) {
 	img := `<img src="` + externalLinkPngPath + `" width="20" height="20"></img>`
-	
+
 	for _, article := range articles {
 		content := article.Content
-		var buf = bytes.NewBuffer(make([]byte, 0, len(content) + 10000))
+		var buf = bytes.NewBuffer(make([]byte, 0, len(content)+10000))
 		for range [1000]struct{}{} {
 			aStart := find(content, 0, A)
 			if aStart < 0 {
 				break
 			}
-			index := aStart+len(A)
+			index := aStart + len(A)
 
 			end := find(content, index, []byte(">"))
 			if end < 0 {
-				fatalError("a tag is incomplete in article:" + article.Filename, content[aStart:])
+				fatalError("a tag is incomplete in article:"+article.Filename, content[aStart:])
 			}
 			end++
 
@@ -825,18 +835,18 @@ func hintExternalLinks(articles []*Article, externalLinkPngPath string) {
 
 			quotaStart := find(content[:end], hrefStart, []byte(`"`))
 			if quotaStart < 0 {
-				fatalError("a href is incomplete in article:" + article.Filename, content[aStart:])
+				fatalError("a href is incomplete in article:"+article.Filename, content[aStart:])
 			}
 			quotaStart++
 
 			quotaEnd := find(content[:end], quotaStart, []byte(`"`))
 			if quotaEnd < 0 {
-				fatalError("a href is incomplete in article:" + article.Filename, content[aStart:])
+				fatalError("a href is incomplete in article:"+article.Filename, content[aStart:])
 			}
 
 			aEnd := find(content, index, _A)
 			if aEnd < 0 {
-				fatalError("a tag doesn't match in article:" + article.Filename, content[index:])
+				fatalError("a tag doesn't match in article:"+article.Filename, content[index:])
 			}
 			endEnd := aEnd + len(_A)
 
@@ -856,9 +866,8 @@ func hintExternalLinks(articles []*Article, externalLinkPngPath string) {
 	}
 }
 
-
 var (
-	attribtuesTobeRemoved = [][]byte {
+	attribtuesTobeRemoved = [][]byte{
 		[]byte(` valign="bottom"`),
 		[]byte(` valign="middle"`),
 		[]byte(` align="center"`),
@@ -869,13 +878,13 @@ var (
 )
 
 func removeXhtmlAttributes(articles []*Article) {
-	
+
 	for _, article := range articles {
 		content := article.Content
 		log.Println("===========", article.Title, len(content))
 		for _, attr := range attribtuesTobeRemoved {
 			content = bytes.ReplaceAll(content, attr, []byte{})
-		log.Printf("%s: %d", attr, len(content))
+			log.Printf("%s: %d", attr, len(content))
 		}
 		article.Content = content
 	}

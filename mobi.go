@@ -7,21 +7,21 @@ import (
 	"github.com/bmaupin/go-epub"
 )
 
-func genetateMobiFile(bookProjectDir, bookVersion string) {
-	genetateMobiFileForBook(bookProjectDir, bookVersion, 0)
-	
+func genetateMobiFile(bookProjectDir, bookVersion, coverImagePath string) {
+	genetateMobiFileForBook(bookProjectDir, bookVersion, coverImagePath, 0)
+
 	//genetateMobiFileForBook(bookProjectDir, bookVersion, 1)
 	//genetateMobiFileForBook(bookProjectDir, bookVersion, 2)
 }
 
 // zero bookId means all.
-func genetateMobiFileForBook(bookProjectDir, bookVersion string, bookId int) {
+func genetateMobiFileForBook(bookProjectDir, bookVersion, coverImagePath string, bookId int) {
 	var e *epub.Epub
 	var outFilename string
 	var indexArticleTitle string
 	var bookWebsite string
 	var engVersion bool
-	
+
 	projectName := confirmBookProjectName(bookProjectDir)
 	switch projectName {
 	default:
@@ -61,7 +61,7 @@ func genetateMobiFileForBook(bookProjectDir, bookVersion string, bookId int) {
 		engVersion = false
 		indexArticleTitle = "目录"
 	}
-	
+
 	cssFilename := "all.css"
 	tempCssFile := mustCreateTempFile("all*.css", []byte(MobiCSS))
 	defer os.Remove(tempCssFile)
@@ -69,13 +69,13 @@ func genetateMobiFileForBook(bookProjectDir, bookVersion string, bookId int) {
 	if err != nil {
 		log.Fatalln("add css", cssFilename, "failed:", err)
 	}
-	
+
 	tempOutFilename := outFilename + "*.epub"
 	tempOutFilename = mustCreateTempFile(tempOutFilename, nil)
 	defer os.Remove(tempOutFilename)
 	//tempOutFilename := outFilename + ".epub"
 
-	writeEpub_Go101(tempOutFilename, e, bookId, bookWebsite, projectName, indexArticleTitle, bookProjectDir, cssPath, "mobi", engVersion)
+	writeEpub_Go101(tempOutFilename, e, bookId, bookWebsite, projectName, indexArticleTitle, bookProjectDir, coverImagePath, cssPath, "mobi", engVersion)
 	println("ebook-convert", tempOutFilename, outFilename)
 	runShellCommand(".", "ebook-convert", tempOutFilename, outFilename)
 	log.Println("Create", outFilename, "done!")

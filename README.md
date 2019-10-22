@@ -26,6 +26,7 @@ $ export BookProjectDir=/home/go/src/github.com/go101/go101
 $ go run *.go -target=epub -book-version=$BookVersion -book-project-dir=$BookProjectDir
 $ go run *.go -target=azw3 -book-version=$BookVersion -book-project-dir=$BookProjectDir
 $ go run *.go -target=apple -book-version=$BookVersion -book-project-dir=$BookProjectDir
+$ go run *.go -target=pdf -book-version=$BookVersion -book-project-dir=$BookProjectDir
 $ go run *.go -target=print -book-version=$BookVersion -book-project-dir=$BookProjectDir
 $ go run *.go -target=all -book-version=$BookVersion -book-project-dir=$BookProjectDir
 ```
