@@ -582,7 +582,7 @@ func replaceImageSources(articles []*Article, imagePaths map[string]string, rewa
 			fmt.Fprintf(buf, `
 				<div style="margin: 16px 0px; text-align: center;">
 				<img src="%s" alt="赞赏"></img>
-				<div>（请访问<a href="https://gfw.go101.org">gfw.go101.org</a>获取本书最新版）</div>
+				<div>（请访问<a href="https://github.com/golang101/golang101">github.com/golang101/golang101</a>获取本书最新版）</div>
 				</div>
 			`, imagePaths[rewardImage])
 		} else { // Go 101
@@ -591,8 +591,9 @@ func replaceImageSources(articles []*Article, imagePaths map[string]string, rewa
 				<div style="margin: 16px 50px; text-align: center;">
 				<div>(The <b>Go 101</b> book is provided as free ebooks.
 				This book is still being improved frequently from time to time.
-				Please visit <a href="https://go101.org">go101.org</a> to
-				get the latest version of this book. BTW, Tapir,
+				Please visit <a href="https://go101.org">go101.org</a> or follow
+				<a href="https://twitter.com/go100and1">@go100and1</a>
+				to get the latest version and news of this book. BTW, Tapir,
 				the author of the book, has developed several fun games.
 				You can visit <a href="https://www.tapirgames.com/">tapirgames.com</a>
 				to get more information about these games. Hope you enjoy them.)</div>

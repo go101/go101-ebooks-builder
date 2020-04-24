@@ -23,10 +23,10 @@ Some examples:
 $ export BookVersion=v1.12.c.7
 $ export BookProjectDir=/home/go/src/github.com/go101/go101
 
-$ go run *.go -target=epub -book-version=$BookVersion -book-project-dir=$BookProjectDir
-$ go run *.go -target=azw3 -book-version=$BookVersion -book-project-dir=$BookProjectDir
-$ go run *.go -target=apple -book-version=$BookVersion -book-project-dir=$BookProjectDir
-$ go run *.go -target=pdf -book-version=$BookVersion -book-project-dir=$BookProjectDir
-$ go run *.go -target=print -book-version=$BookVersion -book-project-dir=$BookProjectDir
-$ go run *.go -target=all -book-version=$BookVersion -book-project-dir=$BookProjectDir
+$ go run . -target=epub -book-version=$BookVersion -book-project-dir=$BookProjectDir
+$ go run . -target=azw3 -book-version=$BookVersion -book-project-dir=$BookProjectDir
+$ go run . -target=apple -book-version=$BookVersion -book-project-dir=$BookProjectDir
+$ go run . -target=pdf -book-version=$BookVersion -book-project-dir=$BookProjectDir
+$ go run . -target=print -book-version=$BookVersion -book-project-dir=$BookProjectDir
+$ go run . -target=all -book-version=$BookVersion -book-project-dir=$BookProjectDir
 ```

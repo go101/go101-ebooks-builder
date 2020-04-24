@@ -68,8 +68,8 @@ func genetatePdfFile(bookProjectDir, bookVersion, coverImagePath string, forPrin
 		}
 		pushParams(inputFilename, outputFilename)
 		pushParams("--toc-title", indexArticleTitle)
-		pushParams("--pdf-header-template", `'<div style="text-align: center; padding-top: -9px; font-size: small;">_SECTION_</div>'`)
-		pushParams("--pdf-footer-template", `'<div style="text-align: center; padding-top: -9px; font-size: small;">_PAGENUM_</div>'`)
+		pushParams("--pdf-header-template", `<p style="text-align: center; font-size: small;">_SECTION_</p>`)
+		pushParams("--pdf-footer-template", `<p style="text-align: center; font-size: small;">_PAGENUM_</p>`)
 		//pushParams("--pdf-page-numbers")
 		pushParams("--paper-size", "a4")
 		pushParams("--pdf-serif-family", serifFont)

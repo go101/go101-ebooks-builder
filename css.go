@@ -79,14 +79,14 @@ table.table-bordered th {
 }
 
 div.alert {
-       background-color: #dddddd;
+	border: 1px solid;
        margin-left: 12pt;
        margin-right: 12pt;
 	padding: 3pt 10pt;
 }
 
 blockquote {
-       background-color: #dddddd;
+	border: 1px solid;
        margin-left: 12pt;
        margin-right: 12pt;
 	padding: 5pt 10pt 5pt 16pt;
@@ -97,11 +97,10 @@ blockquote {
 }
 
 code {
-       background-color: #dddddd;
 }
 
 pre {
-       background-color: #dddddd;
+	border: 1px solid;
        line-height: 1;
 }
 
