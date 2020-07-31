@@ -293,6 +293,8 @@ const PdfCSS = PrintCSS + `
 a[href*='//']::after {
 	content: "🗗";
 	margin: 0 3px 0 5px;
+	vertical-align: top;
+	font-size: small;
 }
 `
 
