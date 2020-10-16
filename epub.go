@@ -65,7 +65,7 @@ func writeEpub_Go101(outputFilename string, e *epub.Epub, bookId int, bookWebsit
 	imagePaths, coverImagePathInEpub := addImages(e, bookProjectDir, coverImagePath)
 	var rewardImage string
 	if projectName == "Golang101" {
-		rewardImage = "res/101-reward-qrcode-5.png"
+		rewardImage = "res/101-reward-qrcode-8.png"
 	}
 
 	index, articles, chapterMapping := mustArticles(bookProjectDir, engVersion)

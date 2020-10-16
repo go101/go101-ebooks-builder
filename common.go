@@ -580,9 +580,11 @@ func replaceImageSources(articles []*Article, imagePaths map[string]string, rewa
 
 		if rewardImage != "" { // Go语言101
 			fmt.Fprintf(buf, `
+				<hr/>
 				<div style="margin: 16px 0px; text-align: center;">
+				<div>本书由<a href="https://gfw.tapirgames.com">老貘</a>历时三年写成。目前本书仍在不断改进和增容中。你的赞赏是本书和Go101.org网站不断增容和维护的动力。</div>
 				<img src="%s" alt="赞赏"></img>
-				<div>（请访问<a href="https://github.com/golang101/golang101">github.com/golang101/golang101</a>获取本书最新版）</div>
+				<div>（请搜索关注微信公众号“Go 101”或者访问<a href="https://github.com/golang101/golang101">github.com/golang101/golang101</a>获取本书最新版）</div>
 				</div>
 			`, imagePaths[rewardImage])
 		} else { // Go 101

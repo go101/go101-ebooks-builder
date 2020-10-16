@@ -14,7 +14,8 @@ Program options:
 For any format, an epub file will be produced firstly,
 then the epub version will be converted to the target format
 by using the calibre GUI or command line tools.
-So please install the calibre software before run this program.
+So please install the calibre software before running this program
+(except for producing epub books only).
 
 
 Some examples:
