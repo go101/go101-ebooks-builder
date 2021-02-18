@@ -670,7 +670,8 @@ func replaceInternalLinks(articles []*Article, chapterMapping map[string]*Articl
 					//newHref = bytes.ReplaceAll(href, []byte(".html"), []byte(internalName))
 					newHref = linkArticle.internalFilename
 				} else {
-					log.Println("internal url path", filename, "not found!")
+					//log.Println("internal url path", filename, "not found!")
+					panic("internal url path " + filename + " not found!")
 					newHref = append([]byte(bookWebsite+"/article/"), href...)
 				}
 
