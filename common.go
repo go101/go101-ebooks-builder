@@ -87,10 +87,11 @@ type Article struct {
 	internalFilename  []byte
 }
 
-const ArticlesFolder = "articles"
+//const ArticlesFolder = "articles"
+const ArticlesFolder = "fundamentals"
 
 func mustArticles(root string, engVersion bool) (index *Article, articles []*Article, chapterMapping map[string]*Article) {
-	index = mustArticle(engVersion, -1, root, ArticlesFolder, "101.html")
+	index = mustArticle(engVersion, -1, root, "pages", ArticlesFolder, "101.html")
 	articles, chapterMapping = must101Articles(root, index, engVersion)
 	//for _, a := range articles {
 	//	log.Println(a.Title)
@@ -132,33 +133,42 @@ func mustArticle(engVersion bool, chapterNumber int, root string, pathTokens ...
 	}
 }
 
-const MaxLen = 128
+const MaxLen = 256
 
-var H1, _H1 = []byte("<h1>"), []byte("</h1>")
+var H1, _H1 = []byte("<h1"), []byte("</h1>")
 var TagSigns = [2]rune{'<', '>'}
 
 func retrieveArticleTitle(content []byte) string {
 	j, i := -1, bytes.Index(content, H1)
-	if i >= 0 {
-		i += len(H1)
-		j = bytes.Index(content[i:i+MaxLen], _H1)
-		if j >= 0 {
-			//return string(content[i-len(H1) : i+j+len(_H1)])
-			//return string(content[i : i+j])
+	if i < 0 {
+		return ""
+	}
 
-			title := string(content[i : i+j])
-			k, s := 0, make([]rune, 0, MaxLen)
-			for _, r := range title {
-				if r == TagSigns[k] {
-					k = (k + 1) & 1
-				} else if k == 0 {
-					s = append(s, r)
-				}
-			}
-			return string(s)
+	i += len(H1)
+	i2 := bytes.IndexByte(content[i:i+MaxLen], '>')
+	if i2 < 0 {
+		return ""
+	}
+	i += i2 + 1
+
+	j = bytes.Index(content[i:i+MaxLen], _H1)
+	if j < 0 {
+		return ""
+	}
+
+	//return string(content[i-len(H1) : i+j+len(_H1)])
+	//return string(content[i : i+j])
+
+	title := string(bytes.TrimSpace(content[i : i+j]))
+	k, s := 0, make([]rune, 0, MaxLen)
+	for _, r := range title {
+		if r == TagSigns[k] {
+			k = (k + 1) & 1
+		} else if k == 0 {
+			s = append(s, r)
 		}
 	}
-	return ""
+	return string(s)
 }
 
 var Anchor, _Anchor, LineToRemoveTag, endl = []byte(`<li><a class="index" href="`), []byte(`">`), []byte(`(to remove)`), []byte("\n")
@@ -215,7 +225,7 @@ func must101Articles(root string, indexArticle *Article, engVersion bool) (artic
 			break
 		}
 
-		article := mustArticle(engVersion, chapter, root, ArticlesFolder, string(content[:i]))
+		article := mustArticle(engVersion, chapter, root, "pages", ArticlesFolder, string(content[:i]))
 		articles = append(articles, article)
 		chapter++
 
@@ -591,11 +601,10 @@ func replaceImageSources(articles []*Article, imagePaths map[string]string, rewa
 			fmt.Fprintf(buf, `
 				<hr/>
 				<div style="margin: 16px 50px; text-align: center;">
-				<div>(The <b>Go 101</b> book is provided as free ebooks.
-				This book is still being improved frequently from time to time.
+				<div>(The <b>Go 101</b> book is still being improved frequently from time to time.
 				Please visit <a href="https://go101.org">go101.org</a> or follow
-				<a href="https://twitter.com/go100and1">@go100and1</a>
-				to get the latest version and news of this book. BTW, Tapir,
+				<a href="https://x.com/zigo_101">@zigo_101</a>
+				to get the latest news of this book. BTW, Tapir,
 				the author of the book, has developed several fun games.
 				You can visit <a href="https://www.tapirgames.com/">tapirgames.com</a>
 				to get more information about these games. Hope you enjoy them.)</div>

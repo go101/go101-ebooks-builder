@@ -24,12 +24,15 @@ const CoverImageTempFilePattern = "101-front-cover-*.png"
 func buildCoverImage(bookProjectDir, bookVersion string) string {
 
 	revison := ""
-	hash := runShellCommand2(true, bookProjectDir, "git", "rev-parse", "HEAD")
+	hash := runShellCommand2(true, bookProjectDir, "git", "rev-parse", bookVersion)
 	hash = bytes.TrimSpace(hash)
 	if len(hash) > 7 {
 		hash = hash[:7]
 		revison = string(hash)
 	}
+	
+	// git log -1 --pretty='%ad' --date=format:'%Y/%m/%d' v1.16.a
+	// 2021/02/18
 
 	var versionText string
 	if revison != "" {
@@ -39,7 +42,7 @@ func buildCoverImage(bookProjectDir, bookVersion string) string {
 	}
 
 	// Load cover image
-	inFile, err := os.Open(filepath.Join(bookProjectDir, "articles", "res", CoverImageFilename))
+	inFile, err := os.Open(filepath.Join(bookProjectDir, "pages", ArticlesFolder, "res", CoverImageFilename))
 	if err != nil {
 		log.Fatal(err)
 	}

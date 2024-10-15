@@ -130,7 +130,7 @@ func writeEpub_Go101(outputFilename string, e *epub.Epub, bookId int, bookWebsit
 func addImages(e *epub.Epub, bookProjectDir, coverImagePath string) (map[string]string, string) {
 	imagePaths := make(map[string]string)
 
-	root := filepath.Join(bookProjectDir, ArticlesFolder, "res")
+	root := filepath.Join(bookProjectDir, "pages", ArticlesFolder, "res")
 	f := func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err

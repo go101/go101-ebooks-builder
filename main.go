@@ -30,7 +30,7 @@ func main() {
 			bookProjectDirs = append(bookProjectDirs, path)
 		}
 	}
-	
+
 	if len(bookProjectDirs) == 0 {
 		log.Fatal("-book-project-dir is required.")
 	}
@@ -44,8 +44,8 @@ func main() {
 				bookVersion = string(tag)
 			}
 		}
-		
-		if bookVersion == "" {	
+
+		if bookVersion == "" {
 			log.Fatal("-book-version is required.")
 		}
 

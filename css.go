@@ -1,6 +1,5 @@
 package main
 
-
 /*
 const EpubCSS = `
 .content {
@@ -127,9 +126,6 @@ pre.line-numbers > code:before {
 	-ms-user-select: none;
 }
 `
-
-
-
 
 const Awz3CSS_Chinese = CommonCSS + `
 
@@ -297,7 +293,6 @@ a[href*='//']::after {
 	font-size: small;
 }
 `
-
 
 const AppleCSS = PdfCSS + `
 
